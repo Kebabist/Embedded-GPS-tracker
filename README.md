@@ -129,11 +129,3 @@ This project is licensed under the MIT License — see the repository LICENSE fi
 Maintainer: Kebabist
 
 If you find issues or want to propose features, please open an issue on GitHub.
-
----
-
-Thank you for using Embedded-GPS-tracker — if you'd like, I can also:
-
-- add a small requirements.txt,
-- make the serial port configurable (CLI args or env var),
-- move parser code into a small package (tracker/) so imports are cleaner.
