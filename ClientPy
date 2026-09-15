@@ -1,0 +1,78 @@
+import socket
+import json
+import threading
+
+class NavigationClient:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connected = False
+
+    def connect(self):
+        try:
+            self.socket.connect((self.host, self.port))
+            self.connected = True
+            print(f"Connected to server at {self.host}:{self.port}")
+            threading.Thread(target=self.receive_updates, daemon=True).start()
+        except Exception as e:
+            print(f"Failed to connect: {e}")
+
+    def send_command(self, command):
+        if not self.connected:
+            print("Not connected to server")
+            return
+        try:
+            self.socket.send(json.dumps(command).encode('utf-8'))
+        except Exception as e:
+            print(f"Failed to send command: {e}")
+
+    def receive_updates(self):
+        while self.connected:
+            try:
+                data = self.socket.recv(1024).decode('utf-8')
+                if not data:
+                    break
+                update = json.loads(data)
+                print("Received update:", update)
+            except Exception as e:
+                print(f"Error receiving update: {e}")
+                break
+        self.connected = False
+        print("Disconnected from server")
+
+    def set_destination(self, lat, lon):
+        self.send_command({'type': 'set_destination', 'lat': lat, 'lon': lon})
+
+    def start_navigation(self):
+        self.send_command({'type': 'start_navigation'})
+
+    def stop_navigation(self):
+        self.send_command({'type': 'stop_navigation'})
+
+    def close(self):
+        self.socket.close()
+
+def main():
+    client = NavigationClient('localhost', 5000)  # Use 'localhost' to connect to the server on the same machine
+    client.connect()
+
+    while True:
+        command = input("Enter command (set_dest, start, stop, quit): ").strip().lower()
+        if command == 'set_dest':
+            lat = float(input("Enter destination latitude: "))
+            lon = float(input("Enter destination longitude: "))
+            client.set_destination(lat, lon)
+        elif command == 'start':
+            client.start_navigation()
+        elif command == 'stop':
+            client.stop_navigation()
+        elif command == 'quit':
+            break
+        else:
+            print("Invalid command")
+
+    client.close()
+
+if __name__ == "__main__":
+    main()
